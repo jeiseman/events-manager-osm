@@ -1,0 +1,293 @@
+<?php
+/**
+ *
+ * @wordpress-plugin
+ * Plugin Name:       MySnippets
+ * Plugin URI:        
+ * Description:       add snippets
+ * Version:           1.0.0
+ * Author:            jon
+ * Author URI:        
+ * License:           GPL-2.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain:       
+ */
+
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
+add_shortcode('hello', function() {
+	global $EM_Event;
+    return $EM_Event->event_id;
+});
+
+add_filter('em_event_save', function( $result, $event ) {
+    return $result;
+}, 10, 2);
+
+add_filter('em_event_output_placeholder', function( $replace, $event, $result ) {
+    if ( preg_match( '/#_EVENTAVATAR.*/', $result ) ) {
+        $replace = get_avatar( $event->get_contact()->ID, 200 );
+    }
+    return $replace;
+}, 1, 3 );
+
+// add_action('em_event_output_show_condition', 'my_em_new_event_output_show_condition', 1, 4);
+function my_em_new_event_output_show_condition($show, $condition, $full_match, $EM_Event){
+    if( "is_newpost" == $condition ){
+        global $wpdb;
+        $row = $wpdb->get_row($wpdb->prepare("SELECT event_date_modified FROM ".EM_EVENTS_TABLE.' WHERE event_id=%s', $EM_Event->event_id));
+        $event_date_modified = $row ? $row->event_date_modified : null;
+        $postdate = get_post_datetime($EM_Event->post_id)->format('Y-m-d');
+        $threedaysago = date('Y-m-d', strtotime('-3 days', current_time('timestamp')));
+        $show = (strtotime($postdate) >= strtotime($threedaysago) || ($event_date_modified !== null && strtotime($event_date_modified) >= strtotime($threedaysago))) ? true : false;
+    }
+    return $show;
+}
+add_filter('em_event_output_placeholder', 'custom_eventurl_with_nocache', 10, 4);
+function custom_eventurl_with_nocache($replace, $EM_Event, $placeholder, $target) {
+    if ($placeholder === '#_EVENTURL') {
+        $replace .= '?nocache';
+    }
+    return $replace;
+}
+
+/**
+ * Custom Events Manager placeholder to display event description with HTML.
+ *
+ * This function prioritizes the event's custom excerpt. If no excerpt is set,
+ * it uses the main event description, respecting the '<!--more-->' tag.
+ * It also supports a flexible word limit and custom continuation string via
+ * #_EVENTEXCERPT_HTML{words,continuation_string}, preserving all HTML.
+ *
+ * @param string $replace The string to replace the placeholder with.
+ * @param object $EM_Event The EM_Event object.
+ * @param string $result The original placeholder string (e.g., '#_EVENTEXCERPT_HTML{20,read more}').
+ * @return string The processed event description with HTML.
+ */
+function custom_em_event_html_placeholder( $replace, $EM_Event, $result ) {
+    // Define the base placeholder we are looking for.
+    $base_placeholder = '#_EVENTEXCERPT_HTML';
+
+    // Check if the current result matches our base placeholder,
+    // optionally followed by {words,continuation_string}.
+    if ( preg_match( '/^' . preg_quote( $base_placeholder, '/' ) . '(?:\{(\d+)(?:,(.*))?\})?$/', $result, $matches ) ) {
+
+        $source_content = '';
+
+        // 1. Prioritize EM_Event->post_excerpt if it exists and is not empty.
+        if ( ! empty( $EM_Event->post_excerpt ) ) {
+            $source_content = $EM_Event->post_excerpt;
+        } else {
+            // 2. If no excerpt, use post_content and check for <!--more--> tag.
+            // get_extended() is a WordPress function that splits content by <!--more-->.
+            $content_parts = get_extended( $EM_Event->post_content );
+            $source_content = $content_parts['main']; // 'main' contains content before the more tag.
+        }
+
+        // Check if a word limit was specified (i.e., {words,...} part exists).
+        if ( isset( $matches[1] ) ) {
+            $word_limit = (int) $matches[1]; // Extract the number of words
+            $continuation = '...'; // Default continuation string
+
+            // Check if a custom continuation string was provided.
+            if ( isset( $matches[2] ) && $matches[2] !== '' ) {
+                $continuation = $matches[2];
+            }
+
+            // Apply word limit using the HTML-preserving function.
+            if ( $word_limit > 0 ) {
+                $replace = force_balance_tags( html_entity_decode( wp_trim_words( htmlentities( wpautop($source_content) ), $word_limit, $continuation ) ) );
+            } else {
+                // If word limit is 0 or invalid, return full content.
+                $replace = $source_content;
+            }
+        } else {
+            // If no {words,...} part, it means the placeholder was just #_EVENTEXCERPT_HTML.
+            // Return the full determined content without any trimming.
+            $replace = $source_content;
+        }
+    }
+
+    return $replace;
+}
+add_filter( 'em_event_output_placeholder', 'custom_em_event_html_placeholder', 10, 3 );
+
+add_filter( 'em_calendar_get_default_search', function( $atts ) {
+    $atts['empty_months'] = true;
+    return $atts;
+} );
+
+/**
+ * Custom Events Manager Placeholder for Previous/Next Event Links
+ * Only shows links to future events (relative to the current real-world time).
+ * Assumes 'event_start' in the database stores full datetime (YYYY-MM-DD HH:MM:SS).
+ * Uses EM_Event->start() for the current event's datetime.
+ * Labels for links are now "Previous" and "Next".
+ */
+
+/**
+ * Custom Functions for Events Manager Previous/Next Event Navigation
+ * Designed to be used in single event templates or custom blocks.
+ */
+
+    /**
+     * Helper function to get the next or previous event ID based on event_start.
+     *
+     * @param EM_Event $current_event The current EM_Event object.
+     * @param bool     $previous      True for previous, false for next.
+     * @return int|false Returns the adjacent event ID on success, false on failure.
+     */
+    function my_em_get_adjacent_event_id( $current_event, $previous = false ) {
+        global $wpdb;
+
+        // Ensure we have a valid EM_Event object
+        if ( ! $current_event instanceof EM_Event ) {
+            return false;
+        }
+
+        // Get the current event's start datetime in YYYY-MM-DD HH:MM:SS format
+        // The start() method returns an EM_DateTime object which extends DateTime
+        $current_event_datetime_string = $current_event->start()->format('Y-m-d H:i:s');
+
+        // Get the current real-world date and time for comparison
+        $now_datetime_string = current_time('mysql'); // YYYY-MM-DD HH:MM:SS format
+
+        // Determine the SQL operator and order based on whether we're looking for 'previous' or 'next'
+        $query_operator = $previous ? '<' : '>';
+        $order_direction = $previous ? 'DESC' : 'ASC';
+
+        // Construct the SQL query
+        // - event_start $query_operator %s: Finds events before/after the current displayed event.
+        // - event_start >= %s: Ensures the found event is in the future relative to 'now'.
+        // - event_status = 1: Filters for published events.
+        // - ORDER BY: Ensures we get the chronologically closest event.
+        $sql = $wpdb->prepare(
+            "SELECT event_id FROM " . EM_EVENTS_TABLE . "
+            WHERE event_start {$query_operator} %s
+            AND event_start >= %s
+            AND event_status = 1
+            ORDER BY event_start {$order_direction}, event_id {$order_direction}
+            LIMIT 1",
+            $current_event_datetime_string,
+            $now_datetime_string
+        );
+
+        // Execute the query and get the event ID
+        $adjacent_event_id = $wpdb->get_var( $sql );
+
+        // Return the ID or false if not found
+        return $adjacent_event_id ? (int) $adjacent_event_id : false;
+    }
+
+    /**
+     * Displays a link to the next future event.
+     *
+     * @param string $label The text label for the link (default 'Next').
+     * @param string $css_class Additional CSS class for the span.
+     */
+    function my_em_get_next_event_link( $label = 'Next', $css_class = '' ) {
+        global $post;
+		$output = '';
+
+        // Ensure we are on an Events Manager single event page
+        if ( empty($post) || $post->post_type !== EM_POST_TYPE_EVENT ) {
+            return $output;
+        }
+
+        // Get the current EM_Event object
+        $EM_Event = em_get_event( $post->ID, 'post_id' );
+        if ( ! $EM_Event || $EM_Event->status !== 1 ) { // Check if valid and published
+            return $output;
+        }
+
+        // Get the ID of the next adjacent event
+        $next_event_id = my_em_get_adjacent_event_id( $EM_Event, false );
+
+        if ( $next_event_id ) {
+            // Get the EM_Event object for the next event
+            $next_event = em_get_event( $next_event_id );
+            if ( $next_event && $next_event->status === 1 ) { // Double check if valid and published
+                // Construct the HTML for the link
+                $class_attr = $css_class ? ' class="em-next-event ' . esc_attr($css_class) . '"' : ' class="em-next-event"';
+                $output .= '<span' . $class_attr . '><a href="' . esc_url($next_event->get_permalink()) . '">' . esc_html($label) . ' &raquo;</a></span>';
+            }
+        }
+		return $output;
+    }
+
+    /**
+     * Displays a link to the previous future event.
+     *
+     * @param string $label The text label for the link (default 'Previous').
+     * @param string $css_class Additional CSS class for the span.
+     */
+    function my_em_get_previous_event_link( $label = 'Previous', $css_class = '' ) {
+        global $post;
+		$output = '';
+
+        // Ensure we are on an Events Manager single event page
+        if ( empty($post) || $post->post_type !== EM_POST_TYPE_EVENT ) {
+            return $output;
+        }
+
+        // Get the current EM_Event object
+        $EM_Event = em_get_event( $post->ID, 'post_id' );
+        if ( ! $EM_Event || $EM_Event->status !== 1 ) { // Check if valid and published
+            return $output;
+        }
+
+        // Get the ID of the previous adjacent event
+        $previous_event_id = my_em_get_adjacent_event_id( $EM_Event, true );
+
+        if ( $previous_event_id ) {
+            // Get the EM_Event object for the previous event
+            $prev_event = em_get_event( $previous_event_id );
+            if ( $prev_event && $prev_event->status === 1 ) { // Double check if valid and published
+                // Construct the HTML for the link
+                $class_attr = $css_class ? ' class="em-prev-event ' . esc_attr($css_class) . '"' : ' class="em-prev-event"';
+                $output .= '<span' . $class_attr . '>&laquo; <a href="' . esc_url($prev_event->get_permalink()) . '">' . esc_html($label) . '</a></span>';
+            }
+        }
+		return $output;
+    }
+
+// Optional: Combine both links with a separator for easy use
+    /**
+     * Displays both previous and next event links with an optional separator.
+     * Use this if you want one simple function call to output both.
+     *
+     * @param string $prev_label The label for the previous link.
+     * @param string $next_label The label for the next link.
+     * @param string $separator The separator string to place between links.
+     * @param string $container_css_class Additional CSS class for the wrapping span.
+     */
+    function my_em_get_previous_next_event_links( $prev_label = 'Previous', $next_label = 'Next', $separator = ' | ', $container_css_class = 'em-nav-links' ) {
+        $output = '';
+        $prev_link = my_em_get_previous_event_link( $prev_label );
+
+        $next_link = my_em_get_next_event_link( $next_label );
+
+        // Only output the container if at least one link exists
+        if ( $prev_link || $next_link ) {
+            $output .= '<span class="' . esc_attr($container_css_class) . '">';
+            if ( $prev_link ) {
+                $output .= $prev_link;
+            }
+            if ( $prev_link && $next_link ) { // Add separator only if both links are present
+                $output .= esc_html($separator);
+            }
+            if ( $next_link ) {
+                $output .= $next_link;
+            }
+            $output .= '</span>';
+        }
+        return $output;
+    }
+function my_em_previous_next_event_links($replace, $EM_Event, $result) {
+    // Check if our custom placeholder is being called
+    if ($result == '#_PREVIOUSNEXTEVENTS') {
+        return my_em_get_previous_next_event_links();
+    }
+    return $replace;
+}
+add_filter('em_event_output_placeholder', 'my_em_previous_next_event_links', 1, 3);

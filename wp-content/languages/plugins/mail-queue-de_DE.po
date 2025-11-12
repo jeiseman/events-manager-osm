@@ -1,0 +1,53 @@
+# Translation of Plugins - Mail Queue - Stable (latest release) in German
+# This file is distributed under the same license as the Plugins - Mail Queue - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2025-07-05 13:14:55+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/4.0.1\n"
+"Language: de\n"
+"Project-Id-Version: Plugins - Mail Queue - Stable (latest release)\n"
+
+#: mail-queue.php:457
+msgid "Message not found"
+msgstr "Nachricht nicht gefunden"
+
+#: mail-queue-options.php:408
+msgid "Resend"
+msgstr "Erneut senden"
+
+#: mail-queue.php:317
+msgid "WP Mail Queue"
+msgstr "WP Mail Queue"
+
+#: mail-queue-options.php:403 mail-queue-options.php:407
+msgid "Delete"
+msgstr "Löschen"
+
+#. Author URI of the plugin
+#: mail-queue.php
+msgid "https://www.webdesign-muenchen.de"
+msgstr "https://www.webdesign-muenchen.de"
+
+#. Author of the plugin
+#: mail-queue.php
+msgid "WDM"
+msgstr "WDM"
+
+#. Description of the plugin
+#: mail-queue.php
+msgid "Take Control and improve Security of wp_mail(). Queue and log outgoing emails, and get alerted, if your website wants to send more emails than usual."
+msgstr "Übernehme die Kontrolle und verbessere die Sicherheit von wp_mail(). Setze ausgehende E-Mails in eine Warteschlange und protokolliere sie, und lass dich benachrichtigen, wenn deine Website mehr E-Mails als üblich versenden möchte."
+
+#. Plugin URI of the plugin
+#: mail-queue.php
+msgid "https://www.webdesign-muenchen.de/wordpress-plugin-mail-queue/"
+msgstr "https://www.webdesign-muenchen.de/wordpress-plugin-mail-queue/"
+
+#. Plugin Name of the plugin
+#: mail-queue.php
+msgid "Mail Queue"
+msgstr "Mail Queue"

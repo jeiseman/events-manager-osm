@@ -1,0 +1,23 @@
+function my_em_validate_anonymous_event_submission($result, $EM_Event) {
+    // Only apply validation if the user is not logged in (anonymous submission)
+    if (!is_user_logged_in()) {
+        if( empty($_REQUEST['control']) || "8" != $_REQUEST['control']){
+             $EM_Event->add_error( "Fill in the correct answer." );
+             $result = false;
+        }
+    }
+    return $result;
+}
+add_filter('em_event_save_pre', 'my_em_validate_anonymous_event_submission', 10, 2);
+
+function my_control_html( $EM_Event ) {
+    if (!is_user_logged_in()) {
+        ?>
+        <p>
+        <label for='control'><?php _e('How much is three + five?','events-manager') ?></label>
+        <input type="text" name="control" id="control" class="input" value=""/>
+        </p>
+        <?php
+    }
+}
+add_action('em_front_event_form_footer', 'my_control_html', 8, 1);

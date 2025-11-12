@@ -1,0 +1,75 @@
+.em-nav-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.em-prev-event,
+.em-next-event {
+    /* Styles for individual link containers */
+}
+
+.em-nav-links a {
+    text-decoration: none;
+    color: #0073aa; /* Example color */
+    font-weight: bold;
+    padding: 5px 10px;
+}
+
+.em-nav-links a:hover {
+    text-decoration: underline;
+    color: #005177;
+}
+
+.em-nav-links .separator {
+    margin: 0 10px;
+    color: #999;
+}
+
+.table-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Adds spacing between each "data-row" */
+}
+
+.data-row {
+  display: flex;
+  flex-direction: column; /* Stacks the two new rows vertically */
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.cell.header {
+  font-weight: bold;
+  background-color: #f0f0f0;
+  padding: 8px;
+  text-align: center;
+  margin-bottom: 5px; /* Spacing between the two new rows */
+}
+
+
+span.event-price, span.event-spaces {
+	padding: 20px;
+}
+
+.cell-group {
+  padding: 20px 0 0 0;
+  border: 1px solid #eee;
+}
+.em.pixelbones .em-booking-section .data-row .cell-group select:not([multiple])
+ {
+    vertical-align: inherit !important;
+    width: inherit !important;
+    height: 38px !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    border: 1px solid var(--border-color-softer) !important;}
+}
+.em.em-list .em-item i.fa-solid {
+    color: green !important;
+    padding-left: 20px !important;
+}

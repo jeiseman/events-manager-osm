@@ -1,0 +1,71 @@
+<?php
+/**
+ *
+ * @wordpress-plugin
+ * Plugin Name:       MySnippets
+ * Plugin URI:        
+ * Description:       add snippets
+ * Version:           1.0.0
+ * Author:            jon
+ * Author URI:        
+ * License:           GPL-2.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain:       
+ */
+
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
+add_shortcode('ramble-tickets', 'ramble_tickets');
+function ramble_tickets()
+{
+	$ret = '<noscript><a href="https://www.eventbrite.com/e/revolutionary-ramble-2022-registration-215900262497" rel="noopener noreferrer" target="_blank">Click here to register</a></noscript><button id="eventbrite-widget-modal-trigger-215900262497" type="button" style="height: 50px; border-radius: 2.5em;">Click here to register</button>';
+	$ret .= '<script src="https://www.eventbrite.com/static/widgets/eb_widgets.js"></script>';
+	$ret .= '<script type="text/javascript">
+    var exampleCallback = function() {
+        console.log("Order complete!");
+    };
+
+    window.EBWidgets.createWidget({
+        widgetType: "checkout",
+        eventId: "215900262497",
+        modal: true,
+        modalTriggerElementId: "eventbrite-widget-modal-trigger-215900262497",
+        onOrderComplete: exampleCallback
+    });
+</script>';
+	return $ret;
+}
+ 
+add_shortcode('ramble-open-slots', 'ramble_open_slots');
+function ramble_open_slots()
+{
+    $open_slots = 0;
+    $sheets_query = new WP_Query( array(
+        'post_type' => 'dlssus_sheet',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'ends_with' => '2022',
+    ) );
+    while ($sheets_query->have_posts()) {
+        $tasks_query = new WP_Query( array(
+            'post_parent' => $sheets_query->get_queried_object_id(),
+            'post_status' => 'publish',
+            'post_type' => 'dlssus_task',
+            'posts_per_page' => -1
+        ) );
+        while ($tasks_query->have_posts()) {
+            $id = $tasks_query->get_queried_object_id();
+            $num_slots = get_post_meta($id, 'dlssus_qty', true);
+            if (!empty($num_slots)  && $num_slots > 0) {
+                $signups_query = new WP_Query( array(
+                    'post_parent' => $id,
+                    'post_status' => 'publish',
+                    'post_type' => 'dlssus_signup',
+                    'posts_per_page' => -1
+                ) );
+                $open_slots += $num_slots - $signups_query ->found_posts;
+            }
+        }
+    }
+    return $open_slots;
+}

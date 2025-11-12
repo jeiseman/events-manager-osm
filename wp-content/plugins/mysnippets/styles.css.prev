@@ -1,0 +1,68 @@
+.em-nav-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.em-prev-event,
+.em-next-event {
+    /* Styles for individual link containers */
+}
+
+.em-nav-links a {
+    text-decoration: none;
+    color: #0073aa; /* Example color */
+    font-weight: bold;
+    padding: 5px 10px;
+}
+
+.em-nav-links a:hover {
+    text-decoration: underline;
+    color: #005177;
+}
+
+.em-nav-links .separator {
+    margin: 0 10px;
+    color: #999;
+}
+
+.table-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Adds spacing between each "data-row" */
+}
+
+.data-row {
+  display: flex;
+  flex-direction: column; /* Stacks the two new rows vertically */
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.cell.header {
+  font-weight: bold;
+  background-color: #f0f0f0;
+  padding: 8px;
+  text-align: center;
+  margin-bottom: 5px; /* Spacing between the two new rows */
+}
+
+.cell-group {
+  display: flex; /* Makes the second and third cells a horizontal row */
+  width: 100%;
+}
+
+.cell-group .cell {
+  flex: 1; /* Each cell takes up equal space, spanning 50% */
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #eee;
+}
+
+/* Optional: Adds a border between the two 50% cells */
+.cell-group .cell:first-child {
+  border-right: none;
+}
