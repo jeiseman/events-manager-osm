@@ -21,16 +21,6 @@ function em_osm_load_maps() {
 }
 
 function em_osm_load_location(map_container) {
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
   var map_id = $(map_container).attr('id').replace('em-location-map-', '');
     var em_data = $('#em-location-map-coords-' + map_id);
     var lat = em_data.find('.lat').text();
@@ -81,43 +71,6 @@ function em_osm_load_locations(map_container) {
         var featureGroup = L.featureGroup(markers).addTo(map);
         map.fitBounds(featureGroup.getBounds());
     } else {
-
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       $(map_container).html('No locations with valid coordinates to display on the map.');
     }
     maps[map_id] = map;
