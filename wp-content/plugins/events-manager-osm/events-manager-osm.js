@@ -4,7 +4,7 @@
 function em_maps_load() {}
 
 jQuery(document).ready(function($) {
-    if ( $('.em-location-map').length > 0 || $('.em-locations-map').length > 0 || $('#em-map').length > 0 ) {
+    if ( $('div[id^="em-location-map-"]').length > 0 || $('div[id^="em-locations-map-"]').length > 0 || $('#em-map').length > 0 ) {
         em_osm_load_maps();
     }
 });
@@ -13,8 +13,8 @@ var maps = {};
 var maps_markers = {};
 
 function em_osm_load_maps() {
-    $('div.em-location-map').each(function() { em_osm_load_location(this); });
-    $('div.em-locations-map').each(function() { em_osm_load_locations(this); });
+    $('div[id^="em-location-map-"]').each(function() { em_osm_load_location(this); });
+    $('div[id^="em-locations-map-"]').each(function() { em_osm_load_locations(this); });
     if ($('#em-map').length > 0) {
         em_osm_load_location_editor();
     }
