@@ -21,12 +21,23 @@ function em_osm_load_maps() {
 }
 
 function em_osm_load_location(map_container) {
-    var map_id = $(map_container).attr('id').replace('em-location-map-', '');
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  var map_id = $(map_container).attr('id').replace('em-location-map-', '');
     var em_data = $('#em-location-map-coords-' + map_id);
     var lat = em_data.find('.lat').text();
     var lng = em_data.find('.lng').text();
 
-    var map = L.map(map_container).setView([lat, lng], 15);
+
+  var map = L.map(map_container).setView([lat, lng], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
@@ -70,7 +81,44 @@ function em_osm_load_locations(map_container) {
         var featureGroup = L.featureGroup(markers).addTo(map);
         map.fitBounds(featureGroup.getBounds());
     } else {
-         $(map_container).html('No locations with valid coordinates to display on the map.');
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      $(map_container).html('No locations with valid coordinates to display on the map.');
     }
     maps[map_id] = map;
     maps_markers[map_id] = markers;
