@@ -4,7 +4,7 @@
 function em_maps_load() {}
 
 jQuery(document).ready(function($) {
-    if ( $('.em-location-map').length > 0 || $('.em-locations-map').length > 0 || $('#em-map').length > 0 ) {
+    if ( $('div[id^="em-location-map-"]').length > 0 || $('div[id^="em-locations-map-"]').length > 0 || $('#em-map').length > 0 ) {
         em_osm_load_maps();
     }
 });
@@ -13,24 +13,14 @@ var maps = {};
 var maps_markers = {};
 
 function em_osm_load_maps() {
-    $('div.em-location-map').each(function() { em_osm_load_location(this); });
-    $('div.em-locations-map').each(function() { em_osm_load_locations(this); });
+    $('div[id^="em-location-map-"]').each(function() { em_osm_load_location(this); });
+    $('div[id^="em-locations-map-"]').each(function() { em_osm_load_locations(this); });
     if ($('#em-map').length > 0) {
         em_osm_load_location_editor();
     }
 }
 
 function em_osm_load_location(map_container) {
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
   var map_id = $(map_container).attr('id').replace('em-location-map-', '');
     var em_data = $('#em-location-map-coords-' + map_id);
     var lat = em_data.find('.lat').text();
@@ -81,43 +71,6 @@ function em_osm_load_locations(map_container) {
         var featureGroup = L.featureGroup(markers).addTo(map);
         map.fitBounds(featureGroup.getBounds());
     } else {
-
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       $(map_container).html('No locations with valid coordinates to display on the map.');
     }
     maps[map_id] = map;
