@@ -210,6 +210,7 @@ function em_maps() {
                 });
             }
         });
+
         // Check if we are on a location editing page, and if address was previously entered, if so we check location coords
         let location_latitude = jQuery('#location-latitude').val();
         let location_longitude = jQuery('#location-longitude').val();
@@ -221,7 +222,7 @@ function em_maps() {
                 jQuery('#location-address').trigger('change');
             }
         }
-
+        
         //Load map
         if(jQuery('#em-map').length > 0){
             var em_LatLng = L.latLng(0, 0);
