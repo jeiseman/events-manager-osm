@@ -210,6 +210,38 @@ function em_maps() {
                 }
             }, 500);
         });
+        jQuery('#location-name, #location-town, #location-address, #location-state, #location-postcode, #location-country').on('change', function(){
+            //build address
+            if( jQuery(this).prop('readonly') === true ) return;
+            var addresses = [ jQuery('#location-address').val(), jQuery('#location-town').val(), jQuery('#location-state').val(), jQuery('#location-postcode').val() ];
+            var address = '';
+            jQuery.each( addresses, function(i, val){
+                if( val != '' ){
+                    address = ( address == '' ) ? address+val:address+', '+val;
+                }
+            });
+            if( address == '' ){ //in case only name is entered, no address
+                jQuery('#em-map').hide();
+                jQuery('#em-map-404').show();
+                return false;
+            }
+            //do country last, as it's using the text version
+            if( jQuery('#location-country option:selected').val() != 0 ){
+                address = ( address == '' ) ? address+jQuery('#location-country option:selected').text():address+', '+jQuery('#location-country option:selected').text();
+            }
+            //add working indcator whilst we search
+            jQuery('#em-map-404 .em-loading-maps').show();
+            //search!
+            if( address != '' && jQuery('#em-map').length > 0 ){
+                jQuery.get('https://nominatim.openstreetmap.org/search?format=json&q=' + address, function(data) {
+                    if (data.length > 0) {
+                        jQuery('#location-latitude').val(data[0].lat);
+                        jQuery('#location-longitude').val(data[0].lon);
+                    }
+                    refresh_map_location();
+                });
+            }
+        });
         // Check if we are on a location editing page, and if address was previously entered, if so we check location coords
         let location_latitude = jQuery('#location-latitude').val();
         let location_longitude = jQuery('#location-longitude').val();
