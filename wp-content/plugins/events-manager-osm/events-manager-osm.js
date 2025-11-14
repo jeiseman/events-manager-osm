@@ -26,9 +26,11 @@ function em_maps_load_locations(element) {
     let map_id = el.getAttribute('id').replace('em-locations-map-', '');
     let em_data;
     if (document.getElementById('em-locations-map-coords-' + map_id)) {
-        em_data = JSON.parse(document.getElementById('em-locations-map-coords-' + map_id).text);
+        em_data = JSON.parse(document.getElementById('em-locations-map-coords-'
++ map_id).text);
     } else {
-        let coords_data = el.parentElement.querySelector('.em-locations-map-coords');
+        let coords_data = el.parentElement.querySelector('.em-locations-map-coor
+ds');
         if (coords_data) {
             em_data = JSON.parse(coords_data.text);
         } else {
@@ -39,19 +41,22 @@ function em_maps_load_locations(element) {
         if (data.length > 0) {
             maps[map_id] = L.map(el).setView([0, 0], 2);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copy
+right">OpenStreetMap</a> contributors'
             }).addTo(maps[map_id]);
 
             maps_markers[map_id] = [];
             var bounds = L.latLngBounds();
 
             jQuery.map(data, function(location, i) {
-                if (!(location.location_latitude == 0 && location.location_longitude == 0)) {
+                if (!(location.location_latitude == 0 && location.location_longi
+tude == 0)) {
                     var latitude = parseFloat(location.location_latitude);
                     var longitude = parseFloat(location.location_longitude);
                     var location_position = L.latLng(latitude, longitude);
 
-                    var marker = L.marker(location_position).addTo(maps[map_id]);
+                    var marker = L.marker(location_position).addTo(maps[map_id])
+;
                     maps_markers[map_id].push(marker);
                     marker.bindPopup(location.location_balloon);
                     bounds.extend(location_position);
@@ -73,7 +78,8 @@ function em_maps_load_locations(element) {
         } else {
             el.firstElementChild.innerHTML = 'No locations found';
 
-            document.dispatchEvent(new CustomEvent('em_maps_locations_hook_not_found', {
+            document.dispatchEvent(new CustomEvent('em_maps_locations_hook_not_f
+ound', {
                 detail: {
                     id: map_id,
                     el: el
@@ -91,15 +97,18 @@ function em_maps_load_location(el) {
     var lng = jQuery('#em-location-map-coords-' + map_id + ' .lng').text();
     var em_LatLng = L.latLng(lat, lng);
 
-    maps[map_id] = L.map(document.getElementById('em-location-map-' + map_id)).setView(em_LatLng, 14);
+    maps[map_id] = L.map(document.getElementById('em-location-map-' + map_id)).s
+etView(em_LatLng, 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">O
+penStreetMap</a> contributors'
     }).addTo(maps[map_id]);
 
     maps_markers[map_id] = L.marker(em_LatLng).addTo(maps[map_id]);
-    var balloon_content = jQuery('#em-location-map-info-' + map_id + ' .em-map-balloon').html();
+    var balloon_content = jQuery('#em-location-map-info-' + map_id + ' .em-map-b
+alloon').html();
     maps_markers[map_id].bindPopup(balloon_content).openPopup();
-    maps[map_id].invalidateSize();
+    maps[map_id].indvalidateSize();
 }
 
 jQuery(document).on('em_search_ajax', function(e, vars, wrapper) {
@@ -122,7 +131,8 @@ function em_maps() {
     });
 
     //Location stuff - only needed if inputs for location exist
-    if( jQuery('select#location-select-id, input#location-address').length > 0 ){
+    if( jQuery('select#location-select-id, input#location-address').length > 0 )
+{
         var map, marker;
         //load map info
         var refresh_map_location = function(){
@@ -130,14 +140,19 @@ function em_maps() {
             var location_longitude = jQuery('#location-longitude').val();
             let hasCoords = location_latitude != 0 || location_longitude != 0;
             if( hasCoords ){
-                var position = L.latLng(location_latitude, location_longitude); //the location coords
+                var position = L.latLng(location_latitude, location_longitude);
+//the location coords
                 marker.setLatLng(position);
-                var mapTitle = (jQuery('input#location-name').length > 0) ? jQuery('input#location-name').val():jQuery('input#title').val();
+                var mapTitle = (jQuery('input#location-name').length > 0) ? jQue
+ry('input#location-name').val():jQuery('input#title').val();
                 mapTitle = em_esc_attr(mapTitle);
 
-                var balloon_content = '<div id="location-balloon-content"><strong>' + mapTitle + '</strong><br>' +
-                                        em_esc_attr(jQuery('#location-address').val()) +
-                                        '<br>' + em_esc_attr(jQuery('#location-town').val()) +
+                var balloon_content = '<div id="location-balloon-content"><stron
+g>' + mapTitle + '</strong><br>' +
+                                        em_esc_attr(jQuery('#location-address').
+val()) +
+                                        '<br>' + em_esc_attr(jQuery('#location-t
+own').val()) +
                                         '</div>';
                 marker.bindPopup(balloon_content).openPopup();
 
@@ -155,10 +170,13 @@ function em_maps() {
         var get_map_by_id = function(id){
             if(jQuery('#em-map').length > 0){
                 jQuery('#em-map-404 .em-loading-maps').show();
-                jQuery.getJSON(document.URL,{ em_ajax_action:'get_location', id:id }, function(data){
-                    let hasCoords = data.location_latitude != 0 && data.location_longitude != 0;
+                jQuery.getJSON(document.URL,{ em_ajax_action:'get_location', id:
+id }, function(data){
+                    let hasCoords = data.location_latitude != 0 && data.location
+_longitude != 0;
                     if( hasCoords ){
-                        loc_latlng = L.latLng(data.location_latitude, data.location_longitude);
+                        loc_latlng = L.latLng(data.location_latitude, data.locat
+ion_longitude);
                         marker.setLatLng(loc_latlng);
 
                         marker.bindPopup(data.location_balloon).openPopup();
@@ -176,11 +194,19 @@ function em_maps() {
                 });
             }
         };
-        jQuery('#location-select-id, input#location-id').on('change', function() { get_map_by_id( jQuery(this).val() ); } );
-        jQuery('#location-name, #location-town, #location-address, #location-state, #location-postcode, #location-country').on('change', function(){
-            //build address
-            if( jQuery(this).prop('readonly') === true ) return;
-            var addresses = [ jQuery('#location-address').val(), jQuery('#location-town').val(), jQuery('#location-state').val(), jQuery('#location-postcode').val() ];
+        jQuery('#location-select-id, input#location-id').on('change', function()
+ { get_map_by_id( jQuery(this).val() ); } );
+
+        var geocode_timeout;
+        jQuery('#location-name, #location-town, #location-address, #location-sta
+te, #location-postcode, #location-country').on('input', function(){
+            clearTimeout(geocode_timeout);
+            geocode_timeout = setTimeout(function() {
+                //build address
+                if( jQuery(this).prop('readonly') === true ) return;
+                var addresses = [ jQuery('#location-address').val(), jQuery('#locati
+on-town').val(), jQuery('#location-state').val(), jQuery('#location-postcode').v
+al() ];
             var address = '';
             jQuery.each( addresses, function(i, val){
                 if( val != '' ){
@@ -194,13 +220,16 @@ function em_maps() {
             }
             //do country last, as it's using the text version
             if( jQuery('#location-country option:selected').val() != 0 ){
-                address = ( address == '' ) ? address+jQuery('#location-country option:selected').text():address+', '+jQuery('#location-country option:selected').text();
+                address = ( address == '' ) ? address+jQuery('#location-country
+option:selected').text():address+', '+jQuery('#location-country option:selected'
+).text();
             }
             //add working indcator whilst we search
             jQuery('#em-map-404 .em-loading-maps').show();
             //search!
             if( address != '' && jQuery('#em-map').length > 0 ){
-                jQuery.get('https://nominatim.openstreetmap.org/search?format=json&q=' + address, function(data) {
+                jQuery.get('https://nominatim.openstreetmap.org/search?format=js
+on&q=' + address, function(data) {
                     if (data.length > 0) {
                         jQuery('#location-latitude').val(data[0].lat);
                         jQuery('#location-longitude').val(data[0].lon);
@@ -208,14 +237,18 @@ function em_maps() {
                     refresh_map_location();
                 });
             }
-        });
-        // Check if we are on a location editing page, and if address was previously entered, if so we check location coords
+        }, 500));
+        // Check if we are on a location editing page, and if address was previo
+usly entered, if so we check location coords
         let location_latitude = jQuery('#location-latitude').val();
         let location_longitude = jQuery('#location-longitude').val();
         let hasCoords = location_latitude != 0 || location_longitude != 0;
         if ( !hasCoords  ) {
             // check if there's any address items that were added previously
-            if ( document.getElementById('location-address')?.value != '' && (document.getElementById('location-address')?.value != '' || document.getElementById('location-town')?.value != '' || document.getElementById('location-state')?.value != '' || document.getElementById('location-postcode')?.value != '' ) ) {
+            if ( document.getElementById('location-address')?.value != '' && (do
+cument.getElementById('location-address')?.value != '' || document.getElementByI
+d('location-town')?.value != '' || document.getElementById('location-state')?.va
+lue != '' || document.getElementById('location-postcode')?.value != '' ) ) {
                 // trigger a change so we reload the address and coords
                 jQuery('#location-address').trigger('change');
             }
@@ -226,7 +259,8 @@ function em_maps() {
             var em_LatLng = L.latLng(0, 0);
             map = L.map('em-map').setView(em_LatLng, 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copy
+right">OpenStreetMap</a> contributors'
             }).addTo(map);
 
             marker = L.marker(em_LatLng, {
