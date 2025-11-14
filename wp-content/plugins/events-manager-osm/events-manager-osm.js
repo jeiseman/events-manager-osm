@@ -99,6 +99,7 @@ function em_maps_load_location(el) {
     maps_markers[map_id] = L.marker(em_LatLng).addTo(maps[map_id]);
     var balloon_content = jQuery('#em-location-map-info-' + map_id + ' .em-map-balloon').html();
     maps_markers[map_id].bindPopup(balloon_content).openPopup();
+    maps[map_id].indvalidateSize();
 }
 
 jQuery(document).on('em_search_ajax', function(e, vars, wrapper) {
@@ -143,6 +144,7 @@ function em_maps() {
                 jQuery('#em-map').show();
                 jQuery('#em-map-404').hide();
                 map.setView(position);
+                map.invalidateSize();
             } else {
                 jQuery('#em-map').hide();
                 jQuery('#em-map-404').show();
@@ -165,6 +167,7 @@ function em_maps() {
                         jQuery('#em-map-404').hide();
                         jQuery('#em-map-404 .em-loading-maps').hide();
                         map.setView(loc_latlng);
+                        map.invalidateSize();
                     }else{
                         jQuery('#em-map').hide();
                         jQuery('#em-map-404').show();
