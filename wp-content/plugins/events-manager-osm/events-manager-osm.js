@@ -206,7 +206,7 @@ function em_maps() {
                         jQuery('#location-latitude').val(data[0].lat);
                         jQuery('#location-longitude').val(data[0].lon);
                     }
-                refresh_map_location();
+                    refresh_map_location();
                 });
             }
         });
