@@ -6,11 +6,11 @@ var maps = {};
 var maps_markers = {};
 var infoWindow;
 
-function em_maps_load() {
-    if (!em_maps_loaded) {
-        em_maps();
-    }
-}
+function em_maps_load() {}
+
+jQuery(document).ready(function($) {
+    em_maps();
+});
 
 jQuery(document).on('em_view_loaded_map', function(e, view, form) {
     if (!em_maps_loaded) {
