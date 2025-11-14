@@ -42,10 +42,6 @@ function em_osm_admin_enqueue_scripts( $hook ) {
 		wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', array(), '1.7.1' );
 		wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array(), '1.7.1', true );
 		wp_enqueue_script( 'events-manager-osm', plugins_url( 'events-manager-osm.js', __FILE__ ), array( 'jquery', 'leaflet', 'events-manager' ), '1.0.0', true );
-
-        // Add custom CSS to ensure the map fills the container
-        $custom_css = ".em-location-map { height: 300px; width: 100%; }";
-        wp_add_inline_style( 'leaflet', $custom_css );
 	}
 }
 add_action( 'admin_enqueue_scripts', 'em_osm_admin_enqueue_scripts', 20 );

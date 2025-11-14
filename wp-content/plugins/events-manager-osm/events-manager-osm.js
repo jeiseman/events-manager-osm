@@ -221,10 +221,10 @@ function em_maps() {
         //Load map
         if(jQuery('#em-map').length > 0){
             var em_LatLng = L.latLng(0, 0);
-            map = L.map('em-map').setView(em_LatLng, 14);
+            maps.location_map = L.map('em-map').setView(em_LatLng, 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+            }).addTo(maps.location_map);
 
             marker = L.marker(em_LatLng, {
                 draggable: true
@@ -234,7 +234,21 @@ function em_maps() {
                 var position = marker.getLatLng();
                 jQuery('#location-latitude').val(position.lat);
                 jQuery('#location-longitude').val(position.lng);
-                map.setView(position);
+                maps.location_map.setView(position);
+            });
+
+            // Add event listener for postbox toggling
+            jQuery('.postbox').on('postbox-toggled', function(event, postbox) {
+                if (jQuery(postbox).find('#em-map').length > 0) {
+                    maps.location_map.invalidateSize();
+                }
+            });
+
+            // Add click handler for "Add New Location" link
+            jQuery('a.em-add-location').on('click', function() {
+                setTimeout(function() {
+                    maps.location_map.invalidateSize();
+                }, 100);
             });
 
             if( jQuery('#location-select-id').length > 0 ){
