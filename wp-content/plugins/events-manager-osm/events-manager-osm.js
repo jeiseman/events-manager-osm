@@ -99,7 +99,7 @@ function em_maps_load_location(el) {
     maps_markers[map_id] = L.marker(em_LatLng).addTo(maps[map_id]);
     var balloon_content = jQuery('#em-location-map-info-' + map_id + ' .em-map-balloon').html();
     maps_markers[map_id].bindPopup(balloon_content).openPopup();
-    maps[map_id].indvalidateSize();
+    maps[map_id].invalidateSize();
 }
 
 jQuery(document).on('em_search_ajax', function(e, vars, wrapper) {
