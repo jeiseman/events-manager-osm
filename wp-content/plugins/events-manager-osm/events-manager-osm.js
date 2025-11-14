@@ -184,7 +184,7 @@ function em_maps() {
             clearTimeout(geocode_timeout);
             geocode_timeout = setTimeout(function() {
                 //build address
-            if( jQuery(this).prop('readonly') === true ) return;
+            if( jQuery(that).prop('readonly') === true ) return;
                 var addresses = [ jQuery('#location-address').val(), jQuery('#location-town').val(), jQuery('#location-state').val(), jQuery('#location-postcode').val() ];
                 var address = '';
                 jQuery.each( addresses, function(i, val){
@@ -192,11 +192,6 @@ function em_maps() {
                         address = ( address == '' ) ? address+val:address+', '+val;
                     }
                 });
-                if( address == '' ){ //in case only name is entered, no address
-                    jQuery('#em-map').hide();
-                    jQuery('#em-map-404').show();
-                    return false;
-                }
                 //do country last, as it's using the text version
                 if( jQuery('#location-country option:selected').val() != 0 ){
                 address = ( address == '' ) ? address+jQuery('#location-country option:selected').text():address+', '+jQuery('#location-country option:selected').text();
