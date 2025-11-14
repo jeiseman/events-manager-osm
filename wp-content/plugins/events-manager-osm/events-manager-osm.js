@@ -129,7 +129,7 @@ function em_maps() {
             var location_longitude = jQuery('#location-longitude').val();
             let hasCoords = location_latitude != 0 || location_longitude != 0;
             if( hasCoords ){
-                var position = L.latLng(location_latitude, location_longitude); //the location coords
+                var position = L.latLng(location_latitude, location_longitude);
                 marker.setLatLng(position);
                 var mapTitle = (jQuery('input#location-name').length > 0) ? jQuery('input#location-name').val():jQuery('input#title').val();
                 mapTitle = em_esc_attr(mapTitle);
