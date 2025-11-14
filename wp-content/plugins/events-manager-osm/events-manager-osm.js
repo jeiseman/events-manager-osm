@@ -1,166 +1,294 @@
-// Events Manager - OpenStreetMap Integration
+/*
+ * MAP FUNCTIONS - OSM
+ */
+var em_maps_loaded = false;
+var maps = {};
+var maps_markers = {};
+var infoWindow;
 
-// Prevent the default Google Maps from loading
 function em_maps_load() {}
 
 jQuery(document).ready(function($) {
-    if ( $('.em-location-map').length > 0 || $('.em-locations-map').length > 0 || $('#em-map').length > 0 ) {
-        em_osm_load_maps();
+    em_maps();
+});
+
+jQuery(document).on('em_view_loaded_map', function(e, view, form) {
+    if (!em_maps_loaded) {
+        em_maps_load();
+    } else {
+        let map = view.find('div.em-locations-map');
+        em_maps_load_locations(map[0]);
     }
 });
 
-var maps = {};
-var maps_markers = {};
-
-function em_osm_load_maps() {
-    $('div.em-location-map').each(function() { em_osm_load_location(this); });
-    $('div.em-locations-map').each(function() { em_osm_load_locations(this); });
-    if ($('#em-map').length > 0) {
-        em_osm_load_location_editor();
+function em_maps_load_locations(element) {
+    let el = element;
+    let map_id = el.getAttribute('id').replace('em-locations-map-', '');
+    let em_data;
+    if (document.getElementById('em-locations-map-coords-' + map_id)) {
+        em_data = JSON.parse(document.getElementById('em-locations-map-coords-'
++ map_id).text);
+    } else {
+        let coords_data = el.parentElement.querySelector('.em-locations-map-coor
+ds');
+        if (coords_data) {
+            em_data = JSON.parse(coords_data.text);
+        } else {
+            em_data = {};
+        }
     }
-}
+    jQuery.getJSON(document.URL, em_data, function(data) {
+        if (data.length > 0) {
+            maps[map_id] = L.map(el).setView([0, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copy
+right">OpenStreetMap</a> contributors'
+            }).addTo(maps[map_id]);
 
-function em_osm_load_location(map_container) {
+            maps_markers[map_id] = [];
+            var bounds = L.latLngBounds();
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  var map_id = $(map_container).attr('id').replace('em-location-map-', '');
-    var em_data = $('#em-location-map-coords-' + map_id);
-    var lat = em_data.find('.lat').text();
-    var lng = em_data.find('.lng').text();
+            jQuery.map(data, function(location, i) {
+                if (!(location.location_latitude == 0 && location.location_longi
+tude == 0)) {
+                    var latitude = parseFloat(location.location_latitude);
+                    var longitude = parseFloat(location.location_longitude);
+                    var location_position = L.latLng(latitude, longitude);
 
+                    var marker = L.marker(location_position).addTo(maps[map_id])
+;
+                    maps_markers[map_id].push(marker);
+                    marker.bindPopup(location.location_balloon);
+                    bounds.extend(location_position);
+                }
+            });
 
-  var map = L.map(map_container).setView([lat, lng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+            maps[map_id].fitBounds(bounds);
 
-    var marker = L.marker([lat, lng]).addTo(map);
-    var balloon_content = $('#em-location-map-info-' + map_id + ' .em-map-balloon').html();
-    if (balloon_content) {
-        marker.bindPopup(balloon_content);
-    }
-    maps[map_id] = map;
-    maps_markers[map_id] = marker;
-}
+            document.dispatchEvent(new CustomEvent('em_maps_locations_hook', {
+                detail: {
+                    map: maps[map_id],
+                    data: data,
+                    id: map_id,
+                    markers: maps_markers[map_id],
+                    el: el,
+                },
+                cancellable: true,
+            }));
+        } else {
+            el.firstElementChild.innerHTML = 'No locations found';
 
-function em_osm_load_locations(map_container) {
-    var map_id = $(map_container).attr('id').replace('em-locations-map-', '');
-    var em_data = $.parseJSON($('#em-locations-map-coords-' + map_id).text());
-
-    if (!em_data || !em_data.locations || em_data.locations.length === 0) {
-        // Handle case where there are no locations. You might want to show a message.
-        $(map_container).html('No locations to display on the map.'); // Example message
-        return;
-    }
-
-    var map = L.map(map_container).setView([0, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    var markers = [];
-    $.each(em_data.locations, function(i, location) {
-        if ((location.location_latitude != 0 && location.location_latitude !== null) || (location.location_longitude != 0 && location.location_longitude !== null)) {
-            var marker = L.marker([location.location_latitude, location.location_longitude]);
-            if (location.location_balloon) {
-                marker.bindPopup(location.location_balloon);
-            }
-            markers.push(marker);
+            document.dispatchEvent(new CustomEvent('em_maps_locations_hook_not_f
+ound', {
+                detail: {
+                    id: map_id,
+                    el: el
+                },
+                cancellable: true,
+            }));
         }
     });
-
-    if (markers.length > 0) {
-        var featureGroup = L.featureGroup(markers).addTo(map);
-        map.fitBounds(featureGroup.getBounds());
-    } else {
-
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      $(map_container).html('No locations with valid coordinates to display on the map.');
-    }
-    maps[map_id] = map;
-    maps_markers[map_id] = markers;
 }
 
-function em_osm_load_location_editor() {
-    var map_container = $('#em-map')[0];
-    var lat = $('#location-latitude').val();
-    var lng = $('#location-longitude').val();
-    if (lat == 0 && lng == 0) {
-        lat = 40.712776; // Default to New York
-        lng = -74.005974;
-    }
+function em_maps_load_location(el) {
+    el = jQuery(el);
+    var map_id = el.attr('id').replace('em-location-map-', '');
+    var lat = jQuery('#em-location-map-coords-' + map_id + ' .lat').text();
+    var lng = jQuery('#em-location-map-coords-' + map_id + ' .lng').text();
+    var em_LatLng = L.latLng(lat, lng);
 
-    var map = L.map(map_container).setView([lat, lng], 13);
+    maps[map_id] = L.map(document.getElementById('em-location-map-' + map_id)).s
+etView(em_LatLng, 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">O
+penStreetMap</a> contributors'
+    }).addTo(maps[map_id]);
 
-    var marker = L.marker([lat, lng], {
-        draggable: true
-    }).addTo(map);
+    maps_markers[map_id] = L.marker(em_LatLng).addTo(maps[map_id]);
+    var balloon_content = jQuery('#em-location-map-info-' + map_id + ' .em-map-b
+alloon').html();
+    maps_markers[map_id].bindPopup(balloon_content).openPopup();
+    maps[map_id].indvalidateSize();
+}
 
-    marker.on('dragend', function(event) {
-        var position = marker.getLatLng();
-        $('#location-latitude').val(position.lat);
-        $('#location-longitude').val(position.lng);
-    });
-
-    function geocodeAddress() {
-        var address = $('#location-address').val() + ', ' + $('#location-town').val() + ', ' + $('#location-state').val() + ', ' + $('#location-country option:selected').text();
-        $.get('https://nominatim.openstreetmap.org/search?format=json&q=' + address, function(data) {
-            if (data.length > 0) {
-                var lat = data[0].lat;
-                var lon = data[0].lon;
-                map.setView([lat, lon], 15);
-                marker.setLatLng([lat, lon]);
-                $('#location-latitude').val(lat);
-                $('#location-longitude').val(lon);
-            }
+jQuery(document).on('em_search_ajax', function(e, vars, wrapper) {
+    if (em_maps_loaded) {
+        wrapper.find('div.em-location-map').each(function(index, el) {
+            em_maps_load_location(el);
+        });
+        wrapper.find('div.em-locations-map').each(function(index, el) {
+            em_maps_load_locations(el);
         });
     }
+});
 
-    $('#location-address, #location-town, #location-state, #location-country').on('change', geocodeAddress);
+function em_maps() {
+    jQuery('div.em-location-map').each(function(index, el) {
+        em_maps_load_location(el);
+    });
+    jQuery('div.em-locations-map').each(function(index, el) {
+        em_maps_load_locations(el);
+    });
+
+    //Location stuff - only needed if inputs for location exist
+    if( jQuery('select#location-select-id, input#location-address').length > 0 )
+{
+        var map, marker;
+        //load map info
+        var refresh_map_location = function(){
+            var location_latitude = jQuery('#location-latitude').val();
+            var location_longitude = jQuery('#location-longitude').val();
+            let hasCoords = location_latitude != 0 || location_longitude != 0;
+            if( hasCoords ){
+                var position = L.latLng(location_latitude, location_longitude);
+//the location coords
+                marker.setLatLng(position);
+                var mapTitle = (jQuery('input#location-name').length > 0) ? jQue
+ry('input#location-name').val():jQuery('input#title').val();
+                mapTitle = em_esc_attr(mapTitle);
+
+                var balloon_content = '<div id="location-balloon-content"><stron
+g>' + mapTitle + '</strong><br>' +
+                                        em_esc_attr(jQuery('#location-address').
+val()) +
+                                        '<br>' + em_esc_attr(jQuery('#location-t
+own').val()) +
+                                        '</div>';
+                marker.bindPopup(balloon_content).openPopup();
+
+                jQuery('#em-map').show();
+                jQuery('#em-map-404').hide();
+                map.setView(position);
+                map.invalidateSize();
+            } else {
+                jQuery('#em-map').hide();
+                jQuery('#em-map-404').show();
+            }
+        };
+
+        //Add listeners for changes to address
+        var get_map_by_id = function(id){
+            if(jQuery('#em-map').length > 0){
+                jQuery('#em-map-404 .em-loading-maps').show();
+                jQuery.getJSON(document.URL,{ em_ajax_action:'get_location', id:
+id }, function(data){
+                    let hasCoords = data.location_latitude != 0 && data.location
+_longitude != 0;
+                    if( hasCoords ){
+                        loc_latlng = L.latLng(data.location_latitude, data.locat
+ion_longitude);
+                        marker.setLatLng(loc_latlng);
+
+                        marker.bindPopup(data.location_balloon).openPopup();
+
+                        jQuery('#em-map').show();
+                        jQuery('#em-map-404').hide();
+                        jQuery('#em-map-404 .em-loading-maps').hide();
+                        map.setView(loc_latlng);
+                        map.invalidateSize();
+                    }else{
+                        jQuery('#em-map').hide();
+                        jQuery('#em-map-404').show();
+                        jQuery('#em-map-404 .em-loading-maps').hide();
+                    }
+                });
+            }
+        };
+        jQuery('#location-select-id, input#location-id').on('change', function()
+ { get_map_by_id( jQuery(this).val() ); } );
+
+        var geocode_timeout;
+        jQuery('#location-name, #location-town, #location-address, #location-sta
+te, #location-postcode, #location-country').on('input', function(){
+            var that = this;
+            clearTimeout(geocode_timeout);
+            geocode_timeout = setTimeout(function() {
+                //build address
+                if( jQuery(that).prop('readonly') === true ) return;
+                var addresses = [ jQuery('#location-address').val(), jQuery('#locati
+on-town').val(), jQuery('#location-state').val(), jQuery('#location-postcode').v
+al() ];
+                var address = '';
+                jQuery.each( addresses, function(i, val){
+                    if( val != '' ){
+                        address = ( address == '' ) ? address+val:address+', '+val;
+                    }
+                });
+                if( address == '' ){ //in case only name is entered, no address
+                    jQuery('#em-map').hide();
+                    jQuery('#em-map-404').show();
+                    return false;
+                }
+                //do country last, as it's using the text version
+                if( jQuery('#location-country option:selected').val() != 0 ){
+                    address = ( address == '' ) ? address+jQuery('#location-country
+option:selected').text():address+', '+jQuery('#location-country option:selected'
+).text();
+                }
+                //add working indcator whilst we search
+                jQuery('#em-map-404 .em-loading-maps').show();
+                //search!
+                if( address != '' && jQuery('#em-map').length > 0 ){
+                    jQuery.get('https://nominatim.openstreetmap.org/search?format=js
+on&q=' + address, function(data) {
+                        if (data.length > 0) {
+                            jQuery('#location-latitude').val(data[0].lat);
+                            jQuery('#location-longitude').val(data[0].lon);
+                        }
+                        refresh_map_location();
+                    });
+                }
+            }, 500);
+        });
+        // Check if we are on a location editing page, and if address was previo
+usly entered, if so we check location coords
+        let location_latitude = jQuery('#location-latitude').val();
+        let location_longitude = jQuery('#location-longitude').val();
+        let hasCoords = location_latitude != 0 || location_longitude != 0;
+        if ( !hasCoords  ) {
+            // check if there's any address items that were added previously
+            if ( document.getElementById('location-address')?.value != '' && (do
+cument.getElementById('location-address')?.value != '' || document.getElementByI
+d('location-town')?.value != '' || document.getElementById('location-state')?.va
+lue != '' || document.getElementById('location-postcode')?.value != '' ) ) {
+                // trigger a change so we reload the address and coords
+                jQuery('#location-address').trigger('change');
+            }
+        }
+
+        //Load map
+        if(jQuery('#em-map').length > 0){
+            var em_LatLng = L.latLng(0, 0);
+            map = L.map('em-map').setView(em_LatLng, 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copy
+right">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            marker = L.marker(em_LatLng, {
+                draggable: true
+            }).addTo(map);
+
+            marker.on('dragend', function() {
+                var position = marker.getLatLng();
+                jQuery('#location-latitude').val(position.lat);
+                jQuery('#location-longitude').val(position.lng);
+                map.setView(position);
+            });
+
+            if( jQuery('#location-select-id').length > 0 ){
+                jQuery('#location-select-id').trigger('change');
+            }else{
+                refresh_map_location();
+            }
+        }
+    }
+
+    em_maps_loaded = true;
+    jQuery(document).triggerHandler('em_maps_loaded');
+}
+
+function em_esc_attr(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/</gi, '&lt;').replace(/>/gi, '&gt;');
 }
