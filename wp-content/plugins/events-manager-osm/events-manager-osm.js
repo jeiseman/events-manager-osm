@@ -200,44 +200,46 @@ ion_longitude);
         var geocode_timeout;
         jQuery('#location-name, #location-town, #location-address, #location-sta
 te, #location-postcode, #location-country').on('input', function(){
+            var that = this;
             clearTimeout(geocode_timeout);
             geocode_timeout = setTimeout(function() {
                 //build address
-                if( jQuery(this).prop('readonly') === true ) return;
+                if( jQuery(that).prop('readonly') === true ) return;
                 var addresses = [ jQuery('#location-address').val(), jQuery('#locati
 on-town').val(), jQuery('#location-state').val(), jQuery('#location-postcode').v
 al() ];
-            var address = '';
-            jQuery.each( addresses, function(i, val){
-                if( val != '' ){
-                    address = ( address == '' ) ? address+val:address+', '+val;
+                var address = '';
+                jQuery.each( addresses, function(i, val){
+                    if( val != '' ){
+                        address = ( address == '' ) ? address+val:address+', '+val;
+                    }
+                });
+                if( address == '' ){ //in case only name is entered, no address
+                    jQuery('#em-map').hide();
+                    jQuery('#em-map-404').show();
+                    return false;
                 }
-            });
-            if( address == '' ){ //in case only name is entered, no address
-                jQuery('#em-map').hide();
-                jQuery('#em-map-404').show();
-                return false;
-            }
-            //do country last, as it's using the text version
-            if( jQuery('#location-country option:selected').val() != 0 ){
-                address = ( address == '' ) ? address+jQuery('#location-country
+                //do country last, as it's using the text version
+                if( jQuery('#location-country option:selected').val() != 0 ){
+                    address = ( address == '' ) ? address+jQuery('#location-country
 option:selected').text():address+', '+jQuery('#location-country option:selected'
 ).text();
-            }
-            //add working indcator whilst we search
-            jQuery('#em-map-404 .em-loading-maps').show();
-            //search!
-            if( address != '' && jQuery('#em-map').length > 0 ){
-                jQuery.get('https://nominatim.openstreetmap.org/search?format=js
+                }
+                //add working indcator whilst we search
+                jQuery('#em-map-404 .em-loading-maps').show();
+                //search!
+                if( address != '' && jQuery('#em-map').length > 0 ){
+                    jQuery.get('https://nominatim.openstreetmap.org/search?format=js
 on&q=' + address, function(data) {
-                    if (data.length > 0) {
-                        jQuery('#location-latitude').val(data[0].lat);
-                        jQuery('#location-longitude').val(data[0].lon);
-                    }
-                    refresh_map_location();
-                });
-            }
-        }, 500));
+                        if (data.length > 0) {
+                            jQuery('#location-latitude').val(data[0].lat);
+                            jQuery('#location-longitude').val(data[0].lon);
+                        }
+                        refresh_map_location();
+                    });
+                }
+            }, 500);
+        });
         // Check if we are on a location editing page, and if address was previo
 usly entered, if so we check location coords
         let location_latitude = jQuery('#location-latitude').val();
