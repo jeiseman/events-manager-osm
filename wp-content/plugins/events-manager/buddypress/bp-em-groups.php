@@ -64,13 +64,13 @@ function bp_em_group_events_accepted_searches($searches){
 }
 add_filter('em_accepted_searches','bp_em_group_events_accepted_searches',1,1);
 
-function bp_em_group_events_get_default_search($searches, $array){
-	if( !empty($array['group']) && (is_numeric($array['group']) || $array['group'] == 'my' || $array['group'] == 'this') && bp_is_active('groups') ){
-		if($array['group'] == 'this'){ //shows current group, if applicable
-			if( is_numeric(bp_get_current_group_id()) ){
+function bp_em_group_events_get_default_search($searches, $array, $defaults) {
+	if ( !empty($array['group']) && bp_is_active('groups') ) {
+		if ( $array['group'] === 'this' ) { //shows current group, if applicable
+			if ( is_numeric(bp_get_current_group_id()) ) {
 				$searches['group'] = bp_get_current_group_id();
 			}
-		}else{
+		} elseif ( $array['group'] === 'my' || is_numeric($array['group']) || (is_string($array['group']) && preg_match('/^( ?[\-0-9] ?,?)+$/', $array['group'])) ) {
 			$searches['group'] = $array['group'];
 		}
 	}
@@ -82,25 +82,43 @@ add_filter('em_events_get_default_search','bp_em_group_events_get_default_search
  * Privacy Functions
  */
 function bp_em_group_events_build_sql_conditions( $conditions, $args ){
-	if( !empty($args['group']) && is_numeric($args['group']) ){
-		$conditions['group'] = "( `group_id`={$args['group']} )";
+	if ( !empty($args['group']) && ( is_numeric($args['group']) || (is_string($args['group']) && preg_match('/^( ?[\-0-9] ?,?)+$/', $args['group'])) ) ) {
+		$groups = !is_array($args['group']) ? explode(',', $args['group']) : $args['group'];
+		$include_groups = [];
+		$exclude_groups = [];
+		foreach( $groups as $group ){
+			if( is_numeric($group) ){
+				if( $group > 0 ){
+					$include_groups[] = $group;
+				}elseif( $group < 0 ){
+					$exclude_groups[] = abs($group);
+				}
+			}
+		}
+		if( count($include_groups) > 0 ){
+			$conditions['group'] = "( `group_id` IN (".implode(',',$include_groups).") )";
+		}
+		if( count($exclude_groups) > 0 ){
+			$conditions['group_excludes'] = "( `group_id` NOT IN (".implode(',',$exclude_groups).") )";
+		}
 	}elseif( !empty($args['group']) && $args['group'] == 'my' ){
 		$groups = groups_get_user_groups(get_current_user_id());
-		if( count($groups) > 0 ){
+		if( !empty($groups['groups']) && count($groups['groups']) > 0 ){
 			$conditions['group'] = "( `group_id` IN (".implode(',',$groups['groups']).") )";
+		}else{
+			$conditions['group'] = "( `group_id` = 0 )"; //user has no groups, so return no events
 		}
 	}
 	//deal with private groups and events
 	if( is_user_logged_in() ){
-		global $wpdb;
 		//find out what private groups they belong to, and don't show private group events not in their memberships
 		$group_ids = BP_Groups_Member::get_group_ids(get_current_user_id());
-		if( $group_ids['total'] > 0){
+		if( !empty($group_ids['groups']) && count($group_ids['groups']) > 0){
 			$conditions['group_privacy'] = "(`event_private`=0 OR (`event_private`=1 AND (`group_id` IS NULL OR `group_id` = 0)) OR (`event_private`=1 AND `group_id` IN (".implode(',',$group_ids['groups']).")))";
 		}else{
 			//find out what private groups they belong to, and don't show private group events not in their memberships
 			$conditions['group_privacy'] = "(`event_private`=0 OR (`event_private`=1 AND (`group_id` IS NULL OR `group_id` = 0)))";
-		} 
+		}
 	}
 	return $conditions;
 }
