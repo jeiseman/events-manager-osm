@@ -65,68 +65,6 @@ function bp_em_group_events_accepted_searches($searches){
 add_filter('em_accepted_searches','bp_em_group_events_accepted_searches',1,1);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function bp_em_group_events_get_default_search($searches, $array, $defaults) {
 	if ( !empty($array['group']) && bp_is_active('groups') ) {
 		if ( $array['group'] === 'this' ) { //shows current group, if applicable
@@ -231,3 +169,4 @@ function bp_em_meta_box_group(){
 	em_locate_template('forms/event/group.php',true);
 
 }
+
