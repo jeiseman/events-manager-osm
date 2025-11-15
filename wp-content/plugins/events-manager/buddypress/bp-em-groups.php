@@ -64,6 +64,69 @@ function bp_em_group_events_accepted_searches($searches){
 }
 add_filter('em_accepted_searches','bp_em_group_events_accepted_searches',1,1);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function bp_em_group_events_get_default_search($searches, $array, $defaults) {
 	if ( !empty($array['group']) && bp_is_active('groups') ) {
 		if ( $array['group'] === 'this' ) { //shows current group, if applicable
@@ -78,8 +141,8 @@ function bp_em_group_events_get_default_search($searches, $array, $defaults) {
 }
 add_filter('em_events_get_default_search','bp_em_group_events_get_default_search',1,2);
 
-/*
- * Privacy Functions
+/**
+ * SQL Builder Function: Handles our custom search keys AND native EM keys.
  */
 function bp_em_group_events_build_sql_conditions( $conditions, $args ){
 	if ( !empty($args['group']) && ( is_numeric($args['group']) || (is_string($args['group']) && preg_match('/^( ?[\-0-9] ?,?)+$/', $args['group'])) ) ) {
@@ -166,4 +229,5 @@ add_action('add_meta_boxes', 'bp_em_meta_boxes');
 	
 function bp_em_meta_box_group(){
 	em_locate_template('forms/event/group.php',true);
+
 }
