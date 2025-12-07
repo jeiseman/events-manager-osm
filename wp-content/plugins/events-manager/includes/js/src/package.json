@@ -10,5 +10,7 @@
     "grunt-contrib-nodeunit": "~0.4.1",
     "grunt-terser": "^2.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "terser": "^5.44.1"
+  }
 }
