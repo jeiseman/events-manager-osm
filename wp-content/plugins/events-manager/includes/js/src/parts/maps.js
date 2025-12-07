@@ -57,46 +57,40 @@ class EM_Map_Google extends EM_Map_Provider {
 		this.lib = {};
 	}
 
-	load() {
+	async load() {
 		if( !em_maps_loaded ){
-			if( typeof google === 'object' && typeof google.maps === 'object' && typeof google.maps.importLibrary === 'function' ){
-				this.init_libs();
-				return;
+			// We check if google.maps is loaded, but even if it is, we want to ensure libraries are loaded.
+			// The bootstrap loader handles checking if it's already loaded (via warnings), but importLibrary is always safe to call.
+
+			// Inject loader if not present (checking window.google or similar is tricky if it's partial)
+			(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+				key: (typeof EM.google_maps_api !== 'undefined') ? EM.google_maps_api : "",
+				v: "weekly",
+			});
+
+			try {
+				const [maps, core, marker, geocoding, places] = await Promise.all([
+					google.maps.importLibrary("maps"),
+					google.maps.importLibrary("core"),
+					google.maps.importLibrary("marker"),
+					google.maps.importLibrary("geocoding"),
+					google.maps.importLibrary("places")
+				]);
+				this.lib = { ...maps, ...core, ...marker, ...geocoding, ...places };
+
+				// Fix for GeocoderStatus if not present (it is deprecated)
+				if( !this.lib.GeocoderStatus ) {
+					this.lib.GeocoderStatus = { OK: 'OK' };
+				}
+
+				em_maps();
+			} catch (e) {
+				console.error("Google Maps failed to load", e);
 			}
-
-			// Inline Bootstrap Loader
-			let loaderParams = {
-				v: "quarterly",
-			};
-			if (EM.google_maps_api) {
-				loaderParams.key = EM.google_maps_api;
-			}
-			(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})(loaderParams);
-
-			this.init_libs();
-		}
-	}
-
-	async init_libs() {
-		try {
-			const { Map, InfoWindow, MapTypeId } = await google.maps.importLibrary("maps");
-			const { Marker } = await google.maps.importLibrary("marker");
-			const { Autocomplete, AutocompleteService, PlacesService } = await google.maps.importLibrary("places");
-			const { Geocoder, GeocoderStatus } = await google.maps.importLibrary("geocoding");
-			const { LatLng, LatLngBounds, event } = await google.maps.importLibrary("core");
-
-			this.lib = {
-				Map, InfoWindow, Marker, Autocomplete, AutocompleteService, PlacesService, Geocoder, GeocoderStatus, LatLng, LatLngBounds, event, MapTypeId
-			};
-
-			this.init_all();
-		} catch (e) {
-			console.error("Google Maps initialization failed", e);
 		}
 	}
 
 	init_all() {
-		if ( !this.lib.Map ) return;
 		// This replaces the old em_maps() logic
 		var self = this;
 		jQuery('div.em-location-map').each( function(index, el){ self.load_location(el); } );
@@ -370,7 +364,7 @@ class EM_Map_Google extends EM_Map_Provider {
 				infoWindow = new self.lib.InfoWindow({
 					content: ''
 				});
-				// var geocoder = new google.maps.Geocoder();
+				var geocoder = new self.lib.Geocoder();
 				self.lib.event.addListener(infoWindow, 'domready', function() {
 					document.getElementById('location-balloon-content').parentNode.style.overflow='';
 					document.getElementById('location-balloon-content').parentNode.parentNode.style.overflow='';
@@ -790,13 +784,9 @@ jQuery(document).on('em_view_loaded_map', function( e, view, form ){
 function em_map_infobox(marker, message, map) {
 	// Wrapper for Google Maps compatibility
 	if( em_maps_get_provider() instanceof EM_Map_Google ){
-		var self = em_maps_get_provider();
-		// If libraries loaded, use from lib, otherwise fallback (or assume libraries loaded if this called)
-		var InfoWindow = self.lib.InfoWindow || google.maps.InfoWindow;
-		var event = self.lib.event || google.maps.event;
-
-		var iw = new InfoWindow({ content: message });
-		event.addListener(marker, 'click', function() {
+		var provider = em_maps_get_provider();
+		var iw = new provider.lib.InfoWindow({ content: message });
+		provider.lib.event.addListener(marker, 'click', function() {
 			if( infoWindow ) infoWindow.close();
 			infoWindow = iw;
 			iw.open(map,marker);
