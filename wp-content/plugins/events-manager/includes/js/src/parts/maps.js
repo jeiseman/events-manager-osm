@@ -117,7 +117,7 @@ class EM_Map_Google extends EM_Map_Provider {
 		jQuery.getJSON(document.URL, em_data , function( data ) {
 			if( data.length > 0 ){
 				//define default options and allow option for extension via event triggers
-				var map_options = { mapTypeId: self.lib.MapTypeId.ROADMAP };
+				var map_options = { mapTypeId: self.lib.MapTypeId.ROADMAP, mapId: EM.google_map_id || "DEMO_MAP_ID" };
 				if( typeof EM.google_map_id_styles == 'object' && typeof EM.google_map_id_styles[map_id] !== 'undefined' ){ console.log(EM.google_map_id_styles[map_id]); map_options.styles = EM.google_map_id_styles[map_id]; }
 				else if( typeof EM.google_maps_styles !== 'undefined' ){ map_options.styles = EM.google_maps_styles; }
 				jQuery(document).triggerHandler('em_maps_locations_map_options', map_options);
@@ -139,11 +139,11 @@ class EM_Map_Google extends EM_Map_Provider {
 						//extend the default marker options
 						jQuery.extend(marker_options, {
 							position: location_position,
-							map: maps[map_id]
+							map: maps[map_id],
+							title: location.location_name,
 						})
-						var marker = new self.lib.Marker(marker_options);
+						var marker = new self.lib.AdvancedMarkerElement(marker_options);
 						maps_markers[map_id].push(marker);
-						marker.setTitle(location.location_name);
 						var myContent = '<div class="em-map-balloon"><div id="em-map-balloon-'+map_id+'" class="em-map-balloon-content">'+ location.location_balloon +'</div></div>';
 
 						// InfoBox logic inline or delegate?
@@ -153,7 +153,7 @@ class EM_Map_Google extends EM_Map_Provider {
 						self.lib.event.addListener(marker, 'click', function() {
 							if( infoWindow ) infoWindow.close();
 							infoWindow = iw;
-							iw.open(maps[map_id],marker);
+							iw.open({ anchor: marker, map: maps[map_id] });
 						});
 
 						//extend bounds
@@ -204,7 +204,8 @@ class EM_Map_Google extends EM_Map_Provider {
 			center: em_LatLng,
 			mapTypeId: self.lib.MapTypeId.ROADMAP,
 			mapTypeControl: false,
-			gestureHandling: 'cooperative'
+			gestureHandling: 'cooperative',
+			mapId: EM.google_map_id || "DEMO_MAP_ID"
 		};
 		if( typeof EM.google_map_id_styles == 'object' && typeof EM.google_map_id_styles[map_id] !== 'undefined' ){ console.log(EM.google_map_id_styles[map_id]); map_options.styles = EM.google_map_id_styles[map_id]; }
 		else if( typeof EM.google_maps_styles !== 'undefined' ){ map_options.styles = EM.google_maps_styles; }
@@ -216,10 +217,10 @@ class EM_Map_Google extends EM_Map_Provider {
 			map: maps[map_id]
 		};
 		jQuery(document).triggerHandler('em_maps_location_marker_options', marker_options);
-		maps_markers[map_id] = new self.lib.Marker(marker_options);
+		maps_markers[map_id] = new self.lib.AdvancedMarkerElement(marker_options);
 		self.markers[map_id] = maps_markers[map_id];
 		infoWindow = new self.lib.InfoWindow({ content: jQuery('#em-location-map-info-'+map_id+' .em-map-balloon').get(0) });
-		infoWindow.open(maps[map_id],maps_markers[map_id]);
+		infoWindow.open({ anchor: maps_markers[map_id], map: maps[map_id] });
 		maps[map_id].panBy(40,-70);
 
 		//JS Hook for handling map after instantiation
@@ -227,7 +228,7 @@ class EM_Map_Google extends EM_Map_Provider {
 		//map resize listener
 		jQuery(window).on('resize', function(e) {
 			self.lib.event.trigger(maps[map_id], "resize");
-			maps[map_id].setCenter(maps_markers[map_id].getPosition());
+			maps[map_id].setCenter(maps_markers[map_id].position);
 			maps[map_id].panBy(40,-70);
 		});
 	}
@@ -244,10 +245,10 @@ class EM_Map_Google extends EM_Map_Provider {
 				let hasCoords = location_latitude != 0 || location_longitude != 0;
 				if( hasCoords ){
 					var position = new self.lib.LatLng(location_latitude, location_longitude); //the location coords
-					marker.setPosition(position);
+					marker.position = position;
 					var mapTitle = (jQuery('input#location-name').length > 0) ? jQuery('input#location-name').val():jQuery('input#title').val();
 					mapTitle = self.em_esc_attr(mapTitle);
-					marker.setTitle( mapTitle );
+					marker.title = mapTitle;
 					jQuery('#em-map').show();
 					jQuery('#em-map-404').hide();
 					self.lib.event.trigger(map, 'resize');
@@ -259,7 +260,7 @@ class EM_Map_Google extends EM_Map_Provider {
 						'<br>' + self.em_esc_attr(jQuery('#location-town').val()) +
 						'</div>'
 					);
-					infoWindow.open(map, marker);
+					infoWindow.open({ anchor: marker, map: map });
 					jQuery(document).triggerHandler('em_maps_location_hook', [map, infoWindow, marker, 0]);
 				} else {
 					jQuery('#em-map').hide();
@@ -275,16 +276,16 @@ class EM_Map_Google extends EM_Map_Provider {
 						let hasCoords = data.location_latitude != 0 && data.location_longitude != 0;
 						if( hasCoords ){
 							var loc_latlng = new self.lib.LatLng(data.location_latitude, data.location_longitude);
-							marker.setPosition(loc_latlng);
-							marker.setTitle( data.location_name );
-							marker.setDraggable(false);
+							marker.position = loc_latlng;
+							marker.title = data.location_name;
+							marker.gmpDraggable = false;
 							jQuery('#em-map').show();
 							jQuery('#em-map-404').hide();
 							jQuery('#em-map-404 .em-loading-maps').hide();
 							map.setCenter(loc_latlng);
 							map.panBy(40,-55);
 							infoWindow.setContent( '<div id="location-balloon-content">'+ data.location_balloon +'</div>');
-							infoWindow.open(map, marker);
+							infoWindow.open({ anchor: marker, map: map });
 							self.lib.event.trigger(map, 'resize');
 							jQuery(document).triggerHandler('em_maps_location_hook', [map, infoWindow, marker, 0]);
 						}else{
@@ -352,14 +353,15 @@ class EM_Map_Google extends EM_Map_Provider {
 					center: em_LatLng,
 					mapTypeId: self.lib.MapTypeId.ROADMAP,
 					mapTypeControl: false,
-					gestureHandling: 'cooperative'
+					gestureHandling: 'cooperative',
+					mapId: EM.google_map_id || "DEMO_MAP_ID"
 				};
 				if( typeof EM.google_maps_styles !== 'undefined' ){ map_options.styles = EM.google_maps_styles; }
 				map = new self.lib.Map( document.getElementById('em-map'), map_options);
-				var marker = new self.lib.Marker({
+				var marker = new self.lib.AdvancedMarkerElement({
 					position: em_LatLng,
 					map: map,
-					draggable: true
+					gmpDraggable: true
 				});
 				infoWindow = new self.lib.InfoWindow({
 					content: ''
@@ -370,9 +372,14 @@ class EM_Map_Google extends EM_Map_Provider {
 					document.getElementById('location-balloon-content').parentNode.parentNode.style.overflow='';
 				});
 				self.lib.event.addListener(marker, 'dragend', function() {
-					var position = marker.getPosition();
-					jQuery('#location-latitude').val(position.lat());
-					jQuery('#location-longitude').val(position.lng());
+					var position = marker.position;
+					if( typeof position.lat === 'function' ){
+						jQuery('#location-latitude').val(position.lat());
+						jQuery('#location-longitude').val(position.lng());
+					}else{
+						jQuery('#location-latitude').val(position.lat);
+						jQuery('#location-longitude').val(position.lng);
+					}
 					map.setCenter(position);
 					map.panBy(40,-55);
 				});
@@ -386,7 +393,7 @@ class EM_Map_Google extends EM_Map_Provider {
 			//map resize listener
 			jQuery(window).on('resize', function(e) {
 				self.lib.event.trigger(map, "resize");
-				map.setCenter(marker.getPosition());
+				map.setCenter(marker.position);
 				map.panBy(40,-55);
 			});
 		}
