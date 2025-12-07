@@ -8,9 +8,7 @@
     "grunt-contrib-concat": "^2.1.0",
     "grunt-contrib-jshint": "~0.10.0",
     "grunt-contrib-nodeunit": "~0.4.1",
-    "grunt-terser": "^2.0.0"
-  },
-  "dependencies": {
+    "grunt-terser": "^2.0.0",
     "terser": "^5.44.1"
   }
 }
