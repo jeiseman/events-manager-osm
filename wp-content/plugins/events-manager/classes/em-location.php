@@ -1030,6 +1030,7 @@ class EM_Location extends EM_Object {
 					        if(!empty($dimensions[0])) $args['width'] = $dimensions[0];
 					        if(!empty($dimensions[1])) $args['height'] = $dimensions[1];
 					    }
+						$args['map_provider'] = em_get_option('dbem_map_provider', 'google');
 						em_locate_template('placeholders/locationmap.php', true, array('args'=>$args,'EM_Location'=>$this));
 						$replace = ob_get_clean();
 					}

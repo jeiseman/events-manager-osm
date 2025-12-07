@@ -217,7 +217,7 @@ global $events_placeholder_tip, $locations_placeholder_tip, $categories_placehol
 	<?php if ( !is_multisite() || (em_wp_is_super_admin() && !get_site_option('dbem_ms_global_caps')) ){ em_admin_option_box_caps(); } ?>
 
 	<div  class="postbox" id="em-opt-google-maps" >
-		<div class="handlediv" title="<?php __('Click to toggle', 'events-manager'); ?>"><br /></div><h3><span><?php _e ( 'Google Maps and Location Services', 'events-manager'); ?></span></h3>
+		<div class="handlediv" title="<?php __('Click to toggle', 'events-manager'); ?>"><br /></div><h3><span><?php _e ( 'Maps and Location Services', 'events-manager'); ?></span></h3>
 		<div class="inside">
 			<div class="em-boxheader">
 				<p><?php esc_html_e('Google Maps API provides you with ways to display maps of your locations and help site visitors find events near their desired locations.','events-manager'); ?></p>
@@ -230,7 +230,8 @@ global $events_placeholder_tip, $locations_placeholder_tip, $categories_placehol
 			</div>
 			<table class="form-table">
 				<?php
-					em_options_radio_binary( esc_html__( 'Enable Google Maps integration?', 'events-manager'), 'dbem_gmap_is_active', esc_html__( 'Check this option to enable Google Map integration.', 'events-manager'), '', '.em-google-maps-enabled' );
+				em_options_select( __('Map Provider', 'events-manager'), 'dbem_map_provider', array('google'=>'Google Maps', 'osm'=>'OpenStreetMap'), __('Choose which map provider to use.', 'events-manager') );
+				em_options_radio_binary( esc_html__( 'Enable Maps?', 'events-manager'), 'dbem_gmap_is_active', esc_html__( 'Check this option to enable maps.', 'events-manager'), '', '.em-google-maps-enabled' );
 				?>
 				<tbody class="form-table em-google-maps-enabled">
 					<?php
