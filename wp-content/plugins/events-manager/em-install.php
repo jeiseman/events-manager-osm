@@ -780,6 +780,7 @@ function em_add_options() {
 		'dbem_ical_real_description_format' => "#_EVENTEXCERPT",
 		'dbem_ical_location_format' => "#_LOCATIONNAME, #_LOCATIONFULLLINE, #_LOCATIONCOUNTRY",
 		//Google Maps
+		'dbem_map_provider'=> 'google',
 		'dbem_gmap_is_active'=> 1,
 		'dbem_google_maps_browser_key'=> '',
 		'dbem_map_default_width'=> '400px', //eventually will use %
