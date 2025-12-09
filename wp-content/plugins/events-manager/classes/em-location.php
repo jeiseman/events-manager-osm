@@ -1230,6 +1230,7 @@ class EM_Location extends EM_Object {
 	
 	function get_google_maps_embed_url(){
 		//generate the map url
+		if ( em_get_option('dbem_map_provider') === 'osm' ) return '';
 		$latlng = $this->location_latitude.','.$this->location_longitude;
 		$args = apply_filters('em_location_google_maps_embed_args', array(
 			'maptype' => 'roadmap',
